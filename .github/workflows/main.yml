@@ -55,8 +55,22 @@ jobs:
         mkdir -p app/src
         mv clean_src/* app/src/
 
-        echo "=== Verifying fixed structure ==="
-        find app/src -not -path '*/.*'
+    # This fixes the Java vs Kotlin version mismatch error
+    - name: Force Java 17 Compatibility
+      run: |
+        echo "=== Forcing Java 17 target compatibility ==="
+        cat << 'EOF' >> app/build.gradle
+
+        android {
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+            kotlinOptions {
+                jvmTarget = '17'
+            }
+        }
+        EOF
 
     - name: Build APK
       run: gradle assembleDebug
