@@ -23,11 +23,16 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    # This automatically downloads and configures a modern Gradle version for you
     - name: Setup Gradle 8.7
       uses: gradle/actions/setup-gradle@v4
       with:
         gradle-version: 8.7
+
+    # This new step will list all your files so we can find the manifest
+    - name: List files in repository (Debugging)
+      run: |
+        echo "=== Listing all files to find AndroidManifest.xml ==="
+        find . -not -path '*/.*'
 
     - name: Build APK
       run: gradle assembleDebug
