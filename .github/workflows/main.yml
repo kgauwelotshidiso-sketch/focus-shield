@@ -28,7 +28,7 @@ jobs:
       with:
         gradle-version: 8.7
 
-    - name: Automatically Fix Folder Structure
+    - name: Safely Fix Folder Structure
       run: |
         echo "=== Creating a clean Android project layout ==="
         mkdir -p clean_src/main/java/com/focusshield/domain
@@ -48,14 +48,14 @@ jobs:
         find . -name "ShieldVpnService.kt" -exec cp {} clean_src/main/java/com/focusshield/vpn/ \;
         find . -name "BlockTrigger.kt" -exec cp {} clean_src/main/java/com/focusshield/core/ \;
 
-        echo "=== Replacing messy folders with clean structure ==="
-        rm -rf app/src
-        rm -rf app/app
-        mkdir -p app/src
-        mv clean_src/* app/src/
-
-        echo "=== Cleaning package attribute from Manifest to fix warning ==="
-        sed -i 's/package="com.focusshield"//g' app/src/main/AndroidManifest.xml
+        echo "=== Carefully replacing Java folders without deleting icons/themes ==="
+        # Delete only the old java folder, leaving the 'res' folder intact
+        rm -rf app/src/main/java
+        mkdir -p app/src/main/java
+        
+        # Move the newly structured java files and manifest into place
+        cp -r clean_src/main/java/* app/src/main/java/
+        cp clean_src/main/AndroidManifest.xml app/src/main/AndroidManifest.xml
 
     - name: Force App Compatibility Rules
       run: |
