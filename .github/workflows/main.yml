@@ -30,24 +30,22 @@ jobs:
 
     - name: Rebuild Pristine Android Project Layout
       run: |
-        echo "=== 1. Backing up Kotlin code files ==="
-        mkdir -p /tmp/kt_backup
-        find . -name "*.kt" -exec cp {} /tmp/kt_backup/ \;
-
-        echo "=== 2. Wiping old layout and creating perfect structure ==="
-        rm -rf app/src
-        mkdir -p app/src/main/java/com/focusshield/domain
+        # Ensure directory structure exists
         mkdir -p app/src/main/java/com/focusshield/core
         mkdir -p app/src/main/res/values
         mkdir -p app/src/main/res/xml
 
-        echo "=== 3. Restoring Kotlin files ==="
+        # Backup Kotlin files
+        mkdir -p /tmp/kt_backup
+        find . -name "*.kt" -exec cp {} /tmp/kt_backup/ \;
+
+        # Restore files to proper locations
         cp /tmp/kt_backup/MainActivity.kt app/src/main/java/com/focusshield/ 2>/dev/null || true
         cp /tmp/kt_backup/HomeScreen.kt app/src/main/java/com/focusshield/ 2>/dev/null || true
         cp /tmp/kt_backup/BlockScreen.kt app/src/main/java/com/focusshield/ 2>/dev/null || true
         cp /tmp/kt_backup/ShieldAccessibilityService.kt app/src/main/java/com/focusshield/core/ 2>/dev/null || true
 
-        echo "=== 4. Generating Accessibility Configuration ==="
+        # Write Configs
         cat << 'EOF' > app/src/main/res/xml/accessibility_service_config.xml
         <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
             android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
@@ -59,69 +57,36 @@ jobs:
 
         cat << 'EOF' > app/src/main/res/values/strings.xml
         <resources>
-            <string name="accessibility_description">Focus Shield requires accessibility access to read browser URLs and block distracting websites.</string>
+            <string name="accessibility_description">Focus Shield requires accessibility access to block distracting content.</string>
         </resources>
         EOF
 
-        echo "=== 5. Generating AndroidManifest ==="
         cat << 'EOF' > app/src/main/AndroidManifest.xml
         <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <application
-                android:allowBackup="true"
-                android:label="Focus Shield"
-                android:supportsRtl="true"
-                android:theme="@style/Theme.FocusShield">
-                
-                <activity
-                    android:name=".MainActivity"
-                    android:exported="true"
-                    android:launchMode="singleTask">
+            <application android:label="Focus Shield" android:theme="@android:style/Theme.Material.NoActionBar">
+                <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask">
                     <intent-filter>
                         <action android:name="android.intent.action.MAIN" />
                         <category android:name="android.intent.category.LAUNCHER" />
                     </intent-filter>
                 </activity>
-
-                <!-- NEW ACCESSIBILITY SERVICE -->
-                <service
-                    android:name=".core.ShieldAccessibilityService"
-                    android:exported="true"
-                    android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+                <service android:name=".core.ShieldAccessibilityService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true">
                     <intent-filter>
                         <action android:name="android.accessibilityservice.AccessibilityService" />
                     </intent-filter>
-                    <meta-data
-                        android:name="android.accessibilityservice"
-                        android:resource="@xml/accessibility_service_config" />
+                    <meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility_service_config" />
                 </service>
-
             </application>
         </manifest>
         EOF
 
-        echo "=== 6. Generating necessary app styles ==="
-        cat << 'EOF' > app/src/main/res/values/themes.xml
-        <resources>
-            <style name="Theme.FocusShield" parent="android:Theme.Material.NoActionBar" />
-        </resources>
-        EOF
-
-    - name: Force App Compatibility Rules
+    - name: Force App Compatibility
       run: |
         cat << 'EOF' >> app/build.gradle
         android {
             namespace "com.focusshield"
-            compileOptions {
-                sourceCompatibility JavaVersion.VERSION_17
-                targetCompatibility JavaVersion.VERSION_17
-            }
-            kotlinOptions {
-                jvmTarget = '17'
-                freeCompilerArgs += [
-                    "-P",
-                    "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
-                ]
-            }
+            compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+            kotlinOptions { jvmTarget = '17' }
         }
         EOF
 
