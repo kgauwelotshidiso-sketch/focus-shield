@@ -1,21 +1,36 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.focusshield">
+
+    <!-- Needed to route network traffic -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="Focus Shield"
         android:allowBackup="true"
-        android:supportsRtl="true">
-
+        android:icon="@mipmap/ic_launcher"
+        android:label="Focus Shield"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.FocusShield">
+        
         <activity
             android:name=".MainActivity"
             android:exported="true">
-
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
-    </application>
+        <!-- THIS TELLS ANDROID THE APP CAN ACT AS A VPN -->
+        <service
+            android:name=".vpn.ShieldVpnService"
+            android:exported="false"
+            android:permission="android.permission.BIND_VPN_SERVICE">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
 
+    </application>
 </manifest>
