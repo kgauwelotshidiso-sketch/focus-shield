@@ -28,11 +28,35 @@ jobs:
       with:
         gradle-version: 8.7
 
-    # This new step will list all your files so we can find the manifest
-    - name: List files in repository (Debugging)
+    # This fixes the messy nested mobile folder structure on the fly
+    - name: Automatically Fix Folder Structure
       run: |
-        echo "=== Listing all files to find AndroidManifest.xml ==="
-        find . -not -path '*/.*'
+        echo "=== Creating a clean Android project layout ==="
+        mkdir -p clean_src/main/java/com/focusshield/domain
+        mkdir -p clean_src/main/java/com/focusshield/vpn
+        mkdir -p clean_src/main/java/com/focusshield/core
+
+        echo "=== Locating and moving AndroidManifest ==="
+        find . -name "AndroidManifest.xml" -exec cp {} clean_src/main/AndroidManifest.xml \;
+
+        echo "=== Locating and flattening Kotlin code files ==="
+        find . -name "MainActivity.kt" -exec cp {} clean_src/main/java/com/focusshield/ \;
+        find . -name "FocusShieldApp.kt" -exec cp {} clean_src/main/java/com/focusshield/ \;
+        find . -name "HomeScreen.kt" -exec cp {} clean_src/main/java/com/focusshield/ \;
+        find . -name "DomainFilter.kt" -exec cp {} clean_src/main/java/com/focusshield/ \;
+        find . -name "BlockScreen.kt" -exec cp {} clean_src/main/java/com/focusshield/ \;
+        find . -name "DomainResolver.kt" -exec cp {} clean_src/main/java/com/focusshield/domain/ \;
+        find . -name "ShieldVpnService.kt" -exec cp {} clean_src/main/java/com/focusshield/vpn/ \;
+        find . -name "BlockTrigger.kt" -exec cp {} clean_src/main/java/com/focusshield/core/ \;
+
+        echo "=== Replacing messy folders with clean structure ==="
+        rm -rf app/src
+        rm -rf app/app
+        mkdir -p app/src
+        mv clean_src/* app/src/
+
+        echo "=== Verifying fixed structure ==="
+        find app/src -not -path '*/.*'
 
     - name: Build APK
       run: gradle assembleDebug
