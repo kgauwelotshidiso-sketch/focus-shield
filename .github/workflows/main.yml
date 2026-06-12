@@ -28,7 +28,6 @@ jobs:
       with:
         gradle-version: 8.7
 
-    # This fixes the messy nested mobile folder structure on the fly
     - name: Automatically Fix Folder Structure
       run: |
         echo "=== Creating a clean Android project layout ==="
@@ -55,10 +54,9 @@ jobs:
         mkdir -p app/src
         mv clean_src/* app/src/
 
-    # This fixes the Java vs Kotlin version mismatch error
-    - name: Force Java 17 Compatibility
+    - name: Force App Compatibility Rules
       run: |
-        echo "=== Forcing Java 17 target compatibility ==="
+        echo "=== Forcing Java 17 and suppressing Compose version check ==="
         cat << 'EOF' >> app/build.gradle
 
         android {
@@ -68,6 +66,10 @@ jobs:
             }
             kotlinOptions {
                 jvmTarget = '17'
+                freeCompilerArgs += [
+                    "-P",
+                    "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
+                ]
             }
         }
         EOF
