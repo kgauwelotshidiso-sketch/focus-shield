@@ -28,34 +28,64 @@ jobs:
       with:
         gradle-version: 8.7
 
-    - name: Safely Fix Folder Structure
+    - name: Rebuild Pristine Android Project Layout
       run: |
-        echo "=== Creating a clean Android project layout ==="
-        mkdir -p clean_src/main/java/com/focusshield/domain
-        mkdir -p clean_src/main/java/com/focusshield/vpn
-        mkdir -p clean_src/main/java/com/focusshield/core
+        echo "=== 1. Backing up Kotlin code files ==="
+        mkdir -p /tmp/kt_backup
+        find . -name "*.kt" -exec cp {} /tmp/kt_backup/ \;
 
-        echo "=== Locating and moving AndroidManifest ==="
-        find . -name "AndroidManifest.xml" -exec cp {} clean_src/main/AndroidManifest.xml \;
+        echo "=== 2. Wiping old layout and creating perfect structure ==="
+        rm -rf app/src
+        mkdir -p app/src/main/java/com/focusshield/domain
+        mkdir -p app/src/main/java/com/focusshield/vpn
+        mkdir -p app/src/main/java/com/focusshield/core
+        mkdir -p app/src/main/res/values
 
-        echo "=== Locating and flattening Kotlin code files ==="
-        find . -name "MainActivity.kt" -exec cp {} clean_src/main/java/com/focusshield/ \;
-        find . -name "FocusShieldApp.kt" -exec cp {} clean_src/main/java/com/focusshield/ \;
-        find . -name "HomeScreen.kt" -exec cp {} clean_src/main/java/com/focusshield/ \;
-        find . -name "DomainFilter.kt" -exec cp {} clean_src/main/java/com/focusshield/ \;
-        find . -name "BlockScreen.kt" -exec cp {} clean_src/main/java/com/focusshield/ \;
-        find . -name "DomainResolver.kt" -exec cp {} clean_src/main/java/com/focusshield/domain/ \;
-        find . -name "ShieldVpnService.kt" -exec cp {} clean_src/main/java/com/focusshield/vpn/ \;
-        find . -name "BlockTrigger.kt" -exec cp {} clean_src/main/java/com/focusshield/core/ \;
+        echo "=== 3. Restoring Kotlin files to correct packages ==="
+        cp /tmp/kt_backup/MainActivity.kt app/src/main/java/com/focusshield/ 2>/dev/null || true
+        cp /tmp/kt_backup/FocusShieldApp.kt app/src/main/java/com/focusshield/ 2>/dev/null || true
+        cp /tmp/kt_backup/HomeScreen.kt app/src/main/java/com/focusshield/ 2>/dev/null || true
+        cp /tmp/kt_backup/DomainFilter.kt app/src/main/java/com/focusshield/ 2>/dev/null || true
+        cp /tmp/kt_backup/BlockScreen.kt app/src/main/java/com/focusshield/ 2>/dev/null || true
+        cp /tmp/kt_backup/DomainResolver.kt app/src/main/java/com/focusshield/domain/ 2>/dev/null || true
+        cp /tmp/kt_backup/ShieldVpnService.kt app/src/main/java/com/focusshield/vpn/ 2>/dev/null || true
+        cp /tmp/kt_backup/BlockTrigger.kt app/src/main/java/com/focusshield/core/ 2>/dev/null || true
 
-        echo "=== Carefully replacing Java folders without deleting icons/themes ==="
-        # Delete only the old java folder, leaving the 'res' folder intact
-        rm -rf app/src/main/java
-        mkdir -p app/src/main/java
-        
-        # Move the newly structured java files and manifest into place
-        cp -r clean_src/main/java/* app/src/main/java/
-        cp clean_src/main/AndroidManifest.xml app/src/main/AndroidManifest.xml
+        echo "=== 4. Generating a flawless AndroidManifest ==="
+        cat << 'EOF' > app/src/main/AndroidManifest.xml
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <application
+                android:allowBackup="true"
+                android:label="Focus Shield"
+                android:supportsRtl="true"
+                android:theme="@style/Theme.FocusShield">
+                <activity
+                    android:name=".MainActivity"
+                    android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                        <category android:name="android.intent.category.LAUNCHER" />
+                    </intent-filter>
+                </activity>
+                <service
+                    android:name=".vpn.ShieldVpnService"
+                    android:exported="false"
+                    android:permission="android.permission.BIND_VPN_SERVICE">
+                    <intent-filter>
+                        <action android:name="android.net.VpnService" />
+                    </intent-filter>
+                </service>
+            </application>
+        </manifest>
+        EOF
+
+        echo "=== 5. Generating necessary app styles ==="
+        cat << 'EOF' > app/src/main/res/values/themes.xml
+        <resources>
+            <style name="Theme.FocusShield" parent="android:Theme.Material.NoActionBar" />
+        </resources>
+        EOF
 
     - name: Force App Compatibility Rules
       run: |
