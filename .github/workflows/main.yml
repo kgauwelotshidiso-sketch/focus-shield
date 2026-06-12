@@ -23,12 +23,6 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    # Generates a fresh, unique signature keystore right before building
-    - name: Generate Unique Debug Keystore
-      run: |
-        mkdir -p ~/.android
-        keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-
     - name: Setup Gradle 8.7
       uses: gradle/actions/setup-gradle@v4
       with:
@@ -60,12 +54,16 @@ jobs:
         mkdir -p app/src
         mv clean_src/* app/src/
 
+        echo "=== Cleaning package attribute from Manifest to fix warning ==="
+        sed -i 's/package="com.focusshield"//g' app/src/main/AndroidManifest.xml
+
     - name: Force App Compatibility Rules
       run: |
-        echo "=== Forcing Java 17 and suppressing Compose version check ==="
+        echo "=== Forcing Java 17, Namespace, and suppressing Compose version check ==="
         cat << 'EOF' >> app/build.gradle
 
         android {
+            namespace "com.focusshield"
             compileOptions {
                 sourceCompatibility JavaVersion.VERSION_17
                 targetCompatibility JavaVersion.VERSION_17
