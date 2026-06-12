@@ -23,6 +23,12 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
+    # Generates a fresh, unique signature keystore right before building
+    - name: Generate Unique Debug Keystore
+      run: |
+        mkdir -p ~/.android
+        keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
     - name: Setup Gradle 8.7
       uses: gradle/actions/setup-gradle@v4
       with:
