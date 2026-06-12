@@ -1,8 +1,6 @@
 name: Build Focus Shield APK
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -21,11 +19,14 @@ jobs:
         distribution: temurin
         java-version: 17
 
-    - name: Make gradlew executable
-      run: chmod +x gradlew
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug
+    - name: Install Gradle
+      run: sudo apt-get install -y gradle
+
+    - name: Build APK (manual Gradle mode)
+      run: gradle assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
